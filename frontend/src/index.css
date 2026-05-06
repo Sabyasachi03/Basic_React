@@ -1,3 +1,14 @@
-* {
-  box-sizing: border-box;
+@import "tailwindcss";
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: linear-gradient(to bottom right, #f0f9ff, #eef2ff, #fdf2f8);
+    color: #0f172a;
+  }
 }

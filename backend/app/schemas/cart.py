@@ -19,3 +19,8 @@ class CartItemResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class CartItemActionResponse(BaseModel):
+    message: str
+    item: CartItemResponse
