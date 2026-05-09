@@ -1,90 +1,67 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-toastify";
-import api from "../services/api";
-
-const passwordRule =
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/;
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { loginUser, storeUser } from "@/services/authService";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email"),
-  password: z
-    .string()
-    .min(8, "Password must be at least 8 characters")
-    .regex(
-      passwordRule,
-      "Password must include uppercase, lowercase, number, and special character"
-    ),
+  password: z.string().min(1, "Password is required"),
 });
 
 function LoginPage() {
   const navigate = useNavigate();
-
   const {
     register,
     handleSubmit,
-    formState: { isSubmitting },
+    formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
+    defaultValues: { email: "", password: "" },
   });
 
   const onSubmit = async (values) => {
     try {
-      const response = await api.post("/auth/login", values);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-      toast.success(response.data.message);
-      navigate("/cart");
-    } catch (err) {
-      toast.error(err.response?.data?.detail ?? err.response?.data?.message);
+      const response = await loginUser(values);
+      storeUser(response.user);
+      toast.success(response.message || "Login successful");
+      navigate("/dashboard");
+    } catch (error) {
+      toast.error("Invalid email or password.");
     }
   };
 
-  const onInvalid = () => {};
-
   return (
-    <section className="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 className="text-2xl font-semibold text-slate-900">Login</h2>
-      <p className="mt-1 text-sm text-slate-600">Welcome back. Enter your details to continue.</p>
+    <Card className="mx-auto w-full max-w-md border-slate-200 bg-white/95 shadow-xl">
+      <CardHeader>
+        <CardTitle>Login</CardTitle>
+        <CardDescription>Access your admin dashboard.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input id="email" type="email" placeholder="you@example.com" {...register("email")} />
+            {errors.email && <p className="text-xs text-red-600">{errors.email.message}</p>}
+          </div>
 
-      <div className="mt-6 space-y-4">
-        <div>
-          <input
-            type="email"
-            placeholder="Email"
-            {...register("email")}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500"
-          />
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input id="password" type="password" placeholder="Enter your password" {...register("password")} />
+            {errors.password && <p className="text-xs text-red-600">{errors.password.message}</p>}
+          </div>
 
-        <div>
-          <input
-            type="password"
-            placeholder="Password"
-            {...register("password")}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500"
-          />
-        </div>
-
-        <button
-          type="button"
-          onClick={handleSubmit(onSubmit, onInvalid)}
-          disabled={isSubmitting}
-          className="w-full rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
-        >
-          {isSubmitting ? "Logging in..." : "Login"}
-        </button>
-      </div>
-
-      <p className="mt-5 text-sm text-slate-600">
-        Don&apos;t have an account? <Link to="/signup" className="font-medium text-blue-600 hover:underline">Signup</Link>
-      </p>
-    </section>
+          <Button className="w-full" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Signing in..." : "Login"}
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
   );
 }
 

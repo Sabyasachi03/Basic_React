@@ -11,12 +11,17 @@
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@radix-ui/react-slot": "^1.2.4",
     "axios": "^1.15.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.14.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "react-hook-form": "^7.75.0",
     "react-router-dom": "^7.14.2",
     "react-toastify": "^11.1.0",
+    "tailwind-merge": "^3.5.0",
     "zod": "^4.4.3"
   },
   "devDependencies": {

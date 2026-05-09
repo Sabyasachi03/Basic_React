@@ -3,10 +3,13 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-toastify";
-import api from "../services/api";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { signupUser } from "@/services/authService";
 
-const passwordRule =
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/;
+const passwordRule = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d]).+$/;
 
 const signupSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -14,87 +17,69 @@ const signupSchema = z.object({
   password: z
     .string()
     .min(8, "Password must be at least 8 characters")
-    .regex(
-      passwordRule,
-      "Password must include uppercase, lowercase, number, and special character"
-    ),
+    .regex(passwordRule, "Password must include uppercase, lowercase, number, and special character"),
 });
 
 function SignupPage() {
   const navigate = useNavigate();
-
   const {
     register,
     handleSubmit,
-    formState: { isSubmitting },
+    formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(signupSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      password: "",
-    },
+    defaultValues: { name: "", email: "", password: "" },
   });
 
   const onSubmit = async (values) => {
     try {
-      const response = await api.post("/auth/signup", values);
-      toast.success(response.data.message);
+      const response = await signupUser(values);
+      toast.success(response.message || "Signup successful");
       navigate("/login");
-    } catch (err) {
-      toast.error(err.response?.data?.detail ?? err.response?.data?.message);
+    } catch (error) {
+      toast.error(error.response?.data?.detail || "Signup failed. Please try again.");
     }
   };
 
-  const onInvalid = () => {};
-
   return (
-    <section className="mx-auto max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <h2 className="text-2xl font-semibold text-slate-900">Signup</h2>
-      <p className="mt-1 text-sm text-slate-600">Create your account to start using your cart.</p>
+    <Card className="mx-auto w-full max-w-md border-slate-200 bg-white/95 shadow-xl">
+      <CardHeader>
+        <CardTitle>Signup</CardTitle>
+        <CardDescription>Create a new account for dashboard access.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
+          <div className="space-y-2">
+            <Label htmlFor="name">Name</Label>
+            <Input id="name" type="text" placeholder="Your name" {...register("name")} />
+            {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
+          </div>
 
-      <div className="mt-6 space-y-4">
-        <div>
-          <input
-            type="text"
-            placeholder="Name"
-            {...register("name")}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500"
-          />
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input id="email" type="email" placeholder="you@example.com" {...register("email")} />
+            {errors.email && <p className="text-xs text-red-600">{errors.email.message}</p>}
+          </div>
 
-        <div>
-          <input
-            type="email"
-            placeholder="Email"
-            {...register("email")}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500"
-          />
-        </div>
+          <div className="space-y-2">
+            <Label htmlFor="password">Password</Label>
+            <Input id="password" type="password" placeholder="Create password" {...register("password")} />
+            {errors.password && <p className="text-xs text-red-600">{errors.password.message}</p>}
+          </div>
 
-        <div>
-          <input
-            type="password"
-            placeholder="Password"
-            {...register("password")}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500"
-          />
-        </div>
+          <Button className="w-full" type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Creating account..." : "Signup"}
+          </Button>
+        </form>
 
-        <button
-          type="button"
-          onClick={handleSubmit(onSubmit, onInvalid)}
-          disabled={isSubmitting}
-          className="w-full rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
-        >
-          {isSubmitting ? "Creating account..." : "Signup"}
-        </button>
-      </div>
-
-      <p className="mt-5 text-sm text-slate-600">
-        Already have an account? <Link to="/login" className="font-medium text-blue-600 hover:underline">Login</Link>
-      </p>
-    </section>
+        <p className="mt-5 text-sm text-slate-600">
+          Already have an account?{" "}
+          <Link className="font-medium text-cyan-700 transition hover:text-cyan-900" to="/login">
+            Login
+          </Link>
+        </p>
+      </CardContent>
+    </Card>
   );
 }
 

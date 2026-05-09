@@ -4,7 +4,13 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "react-toastify";
+import { Pencil, Trash2, LogOut } from "lucide-react";
 import api from "../services/api";
+import { API_ENDPOINTS } from "../services/endpoints";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 const cartItemSchema = z.object({
   name: z.string().min(2, "Item name must be at least 2 characters"),
@@ -25,7 +31,7 @@ function CartPage() {
   const {
     register,
     handleSubmit,
-    formState: { isSubmitting },
+    formState: { errors },
     reset,
   } = useForm({
     resolver: zodResolver(cartItemSchema),
@@ -39,7 +45,7 @@ function CartPage() {
     if (!user) return;
 
     try {
-      const response = await api.get(`/cart/${user.id}`);
+      const response = await api.get(API_ENDPOINTS.cart.listByUser(user.id));
       setItems(response.data);
     } catch (err) {
       toast.error(err.response?.data?.detail ?? err.response?.data?.message);
@@ -65,10 +71,13 @@ function CartPage() {
 
     try {
       if (editingItemId) {
-        const response = await api.put(`/cart/${user.id}/${editingItemId}`, payload);
+        const response = await api.put(
+          API_ENDPOINTS.cart.updateByUser(user.id, editingItemId),
+          payload
+        );
         toast.success(response.data.message);
       } else {
-        const response = await api.post(`/cart/${user.id}`, payload);
+        const response = await api.post(API_ENDPOINTS.cart.createByUser(user.id), payload);
         toast.success(response.data.message);
       }
 
@@ -79,8 +88,6 @@ function CartPage() {
     }
   };
 
-  const onInvalid = () => {};
-
   const handleEdit = (item) => {
     reset({ name: item.name, price: item.price });
     setEditingItemId(item.id);
@@ -90,7 +97,7 @@ function CartPage() {
     if (!user) return;
 
     try {
-      const response = await api.delete(`/cart/${user.id}/${itemId}`);
+      const response = await api.delete(API_ENDPOINTS.cart.deleteByUser(user.id, itemId));
       toast.success(response.data.message);
       fetchItems();
     } catch (err) {
@@ -104,95 +111,71 @@ function CartPage() {
   };
 
   return (
-    <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+    <Card>
+      <CardHeader className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-semibold text-slate-900">{user?.name}&apos;s Cart</h2>
-          <p className="text-sm text-slate-600">Add, edit, and manage your cart items.</p>
+          <CardTitle>{user?.name}&apos;s Cart</CardTitle>
+          <CardDescription>Add, edit, and manage your cart items.</CardDescription>
         </div>
-        <button
-          onClick={handleLogout}
-          className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
-        >
-          Logout
-        </button>
-      </div>
+        <Button variant="outline" onClick={handleLogout}>
+          <LogOut className="h-4 w-4" /> Logout
+        </Button>
+      </CardHeader>
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-4">
-        <div className="sm:col-span-2">
-          <input
-            type="text"
-            placeholder="Item name"
-            {...register("name")}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500"
-          />
-        </div>
-
-        <div>
-          <input
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="Price"
-            {...register("price")}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500"
-          />
-        </div>
-
-        <button
-          type="button"
-          onClick={handleSubmit(onSubmit, onInvalid)}
-          disabled={isSubmitting}
-          className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-70"
-        >
-          {isSubmitting ? "Saving..." : editingItemId ? "Update Item" : "Add Item"}
-        </button>
-
-        {editingItemId && (
-          <button
-            type="button"
-            onClick={resetForm}
-            className="sm:col-span-4 rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-100"
-          >
-            Cancel Editing
-          </button>
-        )}
-      </div>
-
-      <div className="mt-6 space-y-3">
-        {items.length === 0 && (
-          <p className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
-            No items in cart yet.
-          </p>
-        )}
-
-        {items.map((item) => (
-          <div
-            key={item.id}
-            className="flex flex-col gap-3 rounded-xl border border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between"
-          >
-            <div>
-              <p className="text-base font-medium text-slate-900">{item.name}</p>
-              <p className="text-sm text-slate-600">${item.price.toFixed(2)}</p>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => handleEdit(item)}
-                className="rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm text-blue-700 transition hover:bg-blue-100"
-              >
-                Edit
-              </button>
-              <button
-                onClick={() => handleDelete(item.id)}
-                className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-sm text-red-700 transition hover:bg-red-100"
-              >
-                Delete
-              </button>
-            </div>
+      <CardContent className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="grid gap-3 sm:grid-cols-4">
+          <div className="space-y-2 sm:col-span-2">
+            <Label htmlFor="item-name">Item Name</Label>
+            <Input id="item-name" type="text" placeholder="Item name" {...register("name")} />
+            {errors.name && <p className="text-xs text-red-600">{errors.name.message}</p>}
           </div>
-        ))}
-      </div>
-    </section>
+
+          <div className="space-y-2">
+            <Label htmlFor="item-price">Price</Label>
+            <Input id="item-price" type="number" step="0.01" min="0" placeholder="Price" {...register("price")} />
+            {errors.price && <p className="text-xs text-red-600">{errors.price.message}</p>}
+          </div>
+
+          <div className="flex items-end">
+            <Button type="submit" className="w-full">{editingItemId ? "Update Item" : "Add Item"}</Button>
+          </div>
+
+          {editingItemId && (
+            <div className="sm:col-span-4">
+              <Button type="button" variant="secondary" onClick={resetForm}>Cancel Editing</Button>
+            </div>
+          )}
+        </form>
+
+        <div className="space-y-3">
+          {items.length === 0 && (
+            <p className="rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500">
+              No items in cart yet.
+            </p>
+          )}
+
+          {items.map((item) => (
+            <div
+              key={item.id}
+              className="flex flex-col gap-3 rounded-xl border border-slate-200 p-4 sm:flex-row sm:items-center sm:justify-between"
+            >
+              <div>
+                <p className="text-base font-medium text-slate-900">{item.name}</p>
+                <p className="text-sm text-slate-600">${item.price.toFixed(2)}</p>
+              </div>
+              <div className="flex gap-2">
+                <Button type="button" variant="secondary" onClick={() => handleEdit(item)}>
+                  <Pencil className="h-4 w-4" /> Edit
+                </Button>
+                <Button type="button" variant="destructive" onClick={() => handleDelete(item.id)}>
+                  <Trash2 className="h-4 w-4" /> Delete
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
