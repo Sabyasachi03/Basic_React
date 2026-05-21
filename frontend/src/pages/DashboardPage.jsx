@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -24,7 +24,6 @@ import {
   fetchCarts,
   fetchCountries,
   updateCart,
-  updateCountry,
 } from "@/services/dashboardService";
 import { useNavigate } from "react-router-dom";
 
@@ -46,6 +45,7 @@ function DashboardPage() {
   const [editingCartId, setEditingCartId] = useState(null);
   const [editingItemLoadingId, setEditingItemLoadingId] = useState(null);
   const [viewingItem, setViewingItem] = useState(null);
+  const countryDataCacheRef = useRef({});
 
   const {
     register,
@@ -62,9 +62,17 @@ function DashboardPage() {
     [countries, selectedCountryId]
   );
 
-  const loadCountryData = async (countryId) => {
+  const loadCountryData = async (countryId, options = {}) => {
+    const { force = false, showLoading = true } = options;
     if (!user || !countryId) return;
-    setTableLoading(true);
+    if (!force && countryDataCacheRef.current[countryId]) {
+      const cached = countryDataCacheRef.current[countryId];
+      setCarts(cached.carts);
+      setActivities(cached.activities);
+      return;
+    }
+
+    if (showLoading) setTableLoading(true);
     try {
       const [cartRows, activityRows] = await Promise.all([
         fetchCarts(user.id, countryId),
@@ -81,11 +89,23 @@ function DashboardPage() {
           updatedAt: item.updated_at,
         }))
       );
-      setActivities(activityRows);
+      const nextActivities = activityRows;
+      setActivities(nextActivities);
+      countryDataCacheRef.current[countryId] = {
+        carts: cartRows.map((item) => ({
+          id: String(item.id),
+          cartName: item.cart_name,
+          country: countries.find((c) => c.id === countryId)?.name ?? "",
+          budget: item.budget,
+          createdAt: item.created_at,
+          updatedAt: item.updated_at,
+        })),
+        activities: nextActivities,
+      };
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to load country data.");
     } finally {
-      setTableLoading(false);
+      if (showLoading) setTableLoading(false);
     }
   };
 
@@ -112,7 +132,7 @@ function DashboardPage() {
         const firstCountryId = normalized[0]?.id ?? null;
         setSelectedCountryId(firstCountryId);
         if (firstCountryId) {
-          await loadCountryData(firstCountryId);
+          await loadCountryData(firstCountryId, { force: true });
         }
       } catch (error) {
         toast.error(error.response?.data?.detail || "Failed to initialize dashboard.");
@@ -126,10 +146,12 @@ function DashboardPage() {
   }, [navigate, user]);
 
   const handleCountrySelect = async (countryId) => {
+    if (countryId === selectedCountryId) return;
     setSelectedCountryId(countryId);
     setEditingCartId(null);
     reset({ cartName: "", budget: 0 });
-    await loadCountryData(countryId);
+    await loadCountryData(countryId, { force: false, showLoading: false });
+    void loadCountryData(countryId, { force: true, showLoading: false });
   };
 
   const handleLogout = () => {
@@ -143,25 +165,11 @@ function DashboardPage() {
       const created = await createCountry(user.id, { name: countryName });
       const nextCountries = [...countries, { id: String(created.id), name: created.name }];
       setCountries(nextCountries);
+      countryDataCacheRef.current[String(created.id)] = { carts: [], activities: [] };
       await handleCountrySelect(String(created.id));
       toast.success("Country added.");
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to add country.");
-    }
-  };
-
-  const handleEditCountry = async (countryId, countryName) => {
-    if (!user) return;
-    try {
-      await updateCountry(user.id, Number(countryId), { name: countryName });
-      const nextCountries = countries.map((country) =>
-        country.id === countryId ? { ...country, name: countryName } : country
-      );
-      setCountries(nextCountries);
-      setCarts((prev) => prev.map((item) => ({ ...item, country: countryName })));
-      toast.success("Country updated.");
-    } catch (error) {
-      toast.error(error.response?.data?.detail || "Failed to update country.");
     }
   };
 
@@ -176,10 +184,11 @@ function DashboardPage() {
       await deleteCountry(user.id, Number(countryId));
       const nextCountries = countries.filter((country) => country.id !== countryId);
       setCountries(nextCountries);
+      delete countryDataCacheRef.current[countryId];
       const nextSelected = nextCountries[0]?.id ?? null;
       setSelectedCountryId(nextSelected);
       if (nextSelected) {
-        await loadCountryData(nextSelected);
+        await loadCountryData(nextSelected, { force: false });
       }
       toast.success("Country deleted.");
     } catch (error) {
@@ -207,7 +216,7 @@ function DashboardPage() {
 
       setEditingCartId(null);
       reset({ cartName: "", budget: 0 });
-      await loadCountryData(selectedCountryId);
+      await loadCountryData(selectedCountryId, { force: true });
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to save cart item.");
     }
@@ -221,7 +230,7 @@ function DashboardPage() {
       const latest = await fetchCartById(user.id, Number(selectedCountryId), Number(item.id));
       setEditingCartId(String(latest.id));
       reset({ cartName: latest.cart_name, budget: latest.budget });
-      await loadCountryData(selectedCountryId);
+      await loadCountryData(selectedCountryId, { force: true, showLoading: false });
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to load cart details.");
     } finally {
@@ -233,7 +242,7 @@ function DashboardPage() {
     if (!user || !selectedCountryId) return;
     try {
       await deleteCart(user.id, Number(selectedCountryId), Number(item.id));
-      await loadCountryData(selectedCountryId);
+      await loadCountryData(selectedCountryId, { force: true });
       toast.success("Cart item deleted.");
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to delete cart item.");
@@ -245,6 +254,9 @@ function DashboardPage() {
     try {
       await clearActivities(user.id, Number(selectedCountryId));
       setActivities([]);
+      if (countryDataCacheRef.current[selectedCountryId]) {
+        countryDataCacheRef.current[selectedCountryId].activities = [];
+      }
       toast.success("Activity logs cleared.");
     } catch (error) {
       toast.error(error.response?.data?.detail || "Failed to clear activities.");
@@ -263,7 +275,6 @@ function DashboardPage() {
         selectedCountryId,
         onSelectCountry: handleCountrySelect,
         onAddCountry: handleAddCountry,
-        onEditCountry: handleEditCountry,
         onDeleteCountry: handleDeleteCountry,
       }}
     >

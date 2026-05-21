@@ -16,4 +16,12 @@ export const API_ENDPOINTS = {
     cartById: (userId, countryId, cartId) => `/dashboard/${userId}/countries/${countryId}/carts/${cartId}`,
     activities: (userId) => `/dashboard/${userId}/activities`,
   },
+  masters: {
+    countries: "/masters/countries",
+    countryById: (countryId) => `/masters/countries/${countryId}`,
+    states: "/masters/states",
+    stateById: (stateId) => `/masters/states/${stateId}`,
+    districts: "/masters/districts",
+    districtById: (districtId) => `/masters/districts/${districtId}`,
+  },
 };

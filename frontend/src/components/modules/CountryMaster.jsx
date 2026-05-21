@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { useState } from "react";
+import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -8,28 +8,14 @@ function CountryMaster({
   selectedCountryId,
   onSelectCountry,
   onAddCountry,
-  onEditCountry,
   onDeleteCountry,
 }) {
   const [name, setName] = useState("");
-  const [editingCountryId, setEditingCountryId] = useState(null);
-
-  const editingCountry = useMemo(
-    () => countries.find((country) => country.id === editingCountryId),
-    [countries, editingCountryId]
-  );
 
   const handleSubmit = (event) => {
     event.preventDefault();
     if (!name.trim()) return;
-
-    if (editingCountryId) {
-      onEditCountry(editingCountryId, name.trim());
-      setEditingCountryId(null);
-    } else {
-      onAddCountry(name.trim());
-    }
-
+    onAddCountry(name.trim());
     setName("");
   };
 
@@ -44,25 +30,12 @@ function CountryMaster({
         <Input
           value={name}
           onChange={(event) => setName(event.target.value)}
-          placeholder="Add or edit country"
+          placeholder="Add country"
         />
         <div className="flex gap-2">
           <Button type="submit" size="sm" className="flex-1">
-            <Plus className="h-4 w-4" /> {editingCountry ? "Update" : "Add"}
+            <Plus className="h-4 w-4" /> Add
           </Button>
-          {editingCountry && (
-            <Button
-              type="button"
-              size="sm"
-              variant="secondary"
-              onClick={() => {
-                setEditingCountryId(null);
-                setName("");
-              }}
-            >
-              Cancel
-            </Button>
-          )}
         </div>
       </form>
 
@@ -87,17 +60,6 @@ function CountryMaster({
               </button>
 
               <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => {
-                    setEditingCountryId(country.id);
-                    setName(country.name);
-                  }}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
                 <Button
                   type="button"
                   variant="ghost"

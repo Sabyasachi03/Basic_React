@@ -1,47 +1,44 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import LoginPage from "@/pages/LoginPage";
-import DashboardPage from "@/pages/DashboardPage";
-import ProtectedRoute from "@/routes/ProtectedRoute";
-import { getStoredUser } from "@/services/authService";
+import React from "react";
+import {
+  createBrowserRouter,
+  RouterProvider,
+} from "react-router-dom";
 
-function AuthLayout({ children }) {
-  return (
-    <main className="min-h-screen bg-[linear-gradient(140deg,#ecfeff_0%,#f8fafc_45%,#fef9c3_100%)] px-4 py-12">
-      <div className="mx-auto max-w-5xl">{children}</div>
-    </main>
-  );
-}
+const MasterLayout = React.lazy(() => import('../src/components/layout/MasterLayout'))
+const StateMaster = React.lazy(() => import('../src/pages/Master/State/index'))
+const StateMasterLayout = React.lazy(() => import('../src/pages/Master/State/Layout'))
+const StateMasterForm = React.lazy(() => import('../src/pages/Master/State/StateForm'))
 
-function RootRedirect() {
-  const user = getStoredUser();
-  return <Navigate to={user ? "/dashboard" : "/login"} replace />;
-}
 
 function App() {
+  const router = createBrowserRouter([
+    {
+      path: 'master',
+      element: <MasterLayout />,
+      children: [
+        {
+          path: 'state',
+          element: < StateMasterLayout />,
+          children: [
+            {
+              index: true,
+              element: <StateMaster />
+            },
+            {
+              path: 'sate-form',
+              element: <StateMasterForm />
+            },
+          ]
+        },
+      ]
+    },
+  ])
+  
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<RootRedirect />} />
-        <Route
-          path="/login"
-          element={
-            <AuthLayout>
-              <LoginPage />
-            </AuthLayout>
-          }
-        />
+    <>
+      <RouterProvider router={router} />
+    </>
 
-        <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<DashboardPage />} />
-        </Route>
-
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-
-      <ToastContainer position="bottom-right" autoClose={2500} />
-    </BrowserRouter>
   );
 }
 

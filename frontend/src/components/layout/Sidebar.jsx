@@ -5,7 +5,6 @@ function Sidebar({
   selectedCountryId,
   onSelectCountry,
   onAddCountry,
-  onEditCountry,
   onDeleteCountry,
 }) {
   return (
@@ -15,7 +14,6 @@ function Sidebar({
         selectedCountryId={selectedCountryId}
         onSelectCountry={onSelectCountry}
         onAddCountry={onAddCountry}
-        onEditCountry={onEditCountry}
         onDeleteCountry={onDeleteCountry}
       />
     </aside>
