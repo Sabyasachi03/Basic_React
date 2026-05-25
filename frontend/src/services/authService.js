@@ -1,6 +1,5 @@
 import api from "./api";
 import { API_ENDPOINTS } from "./endpoints";
-import { STORAGE_KEYS } from "@/constants/appConstants";
 
 export async function loginUser(payload) {
   const response = await api.post(API_ENDPOINTS.auth.login, payload);
@@ -13,13 +12,12 @@ export async function signupUser(payload) {
 }
 
 export function storeUser(user) {
-  localStorage.setItem(STORAGE_KEYS.user, JSON.stringify(user));
+  localStorage.setItem("user", JSON.stringify(user));
 }
 
 export function getStoredUser() {
-  const rawUser = localStorage.getItem(STORAGE_KEYS.user);
+  const rawUser = localStorage.getItem("user");
   if (!rawUser) return null;
-
   try {
     return JSON.parse(rawUser);
   } catch {
@@ -28,5 +26,5 @@ export function getStoredUser() {
 }
 
 export function clearStoredUser() {
-  localStorage.removeItem(STORAGE_KEYS.user);
+  localStorage.removeItem("user");
 }

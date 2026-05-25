@@ -44,18 +44,7 @@ class StateMasterResponse(BaseModel):
     code: str
     cm_name: str
     country_id: int
-    is_delete: bool
-
-    class Config:
-        from_attributes = True
-
-
-class StateMasterGetResponse(BaseModel):
-    id: int
-    name: str
-    code: str
-    cm_name: str
-    country_id: int
+    country_name: str | None = None
     is_delete: bool
 
     class Config:
@@ -84,19 +73,44 @@ class DistrictMasterResponse(BaseModel):
     code: str
     dm_name: str
     country_id: int
-    country_name: str
     state_id: int
-    state_name: str
+    country_name: str | None = None
+    state_name: str | None = None
     is_delete: bool
 
+    class Config:
+        from_attributes = True
 
-class DistrictMasterGetResponse(BaseModel):
+
+class CityMasterCreate(BaseModel):
+    name: str
+    code: str
+    mayor_name: str
+    country_id: int
+    state_id: int
+    district_id: int
+
+
+class CityMasterUpdate(BaseModel):
+    name: str
+    code: str
+    mayor_name: str
+    country_id: int
+    state_id: int
+    district_id: int
+
+
+class CityMasterResponse(BaseModel):
     id: int
     name: str
     code: str
-    dm_name: str
+    mayor_name: str
     country_id: int
     state_id: int
+    district_id: int
+    country_name: str | None = None
+    state_name: str | None = None
+    district_name: str | None = None
     is_delete: bool
 
     class Config:

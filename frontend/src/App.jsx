@@ -1,44 +1,21 @@
-import React from "react";
-import {
-  createBrowserRouter,
-  RouterProvider,
-} from "react-router-dom";
-
-const MasterLayout = React.lazy(() => import('../src/components/layout/MasterLayout'))
-const StateMaster = React.lazy(() => import('../src/pages/Master/State/index'))
-const StateMasterLayout = React.lazy(() => import('../src/pages/Master/State/Layout'))
-const StateMasterForm = React.lazy(() => import('../src/pages/Master/State/StateForm'))
-
+import { Suspense } from "react";
+import { RouterProvider } from "react-router-dom";
+import { router } from "@/router";
 
 function App() {
-  const router = createBrowserRouter([
-    {
-      path: 'master',
-      element: <MasterLayout />,
-      children: [
-        {
-          path: 'state',
-          element: < StateMasterLayout />,
-          children: [
-            {
-              index: true,
-              element: <StateMaster />
-            },
-            {
-              path: 'sate-form',
-              element: <StateMasterForm />
-            },
-          ]
-        },
-      ]
-    },
-  ])
-  
   return (
-    <>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-slate-50">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-cyan-600" />
+            <p className="text-sm font-medium text-slate-500 animate-pulse">Loading console...</p>
+          </div>
+        </div>
+      }
+    >
       <RouterProvider router={router} />
-    </>
-
+    </Suspense>
   );
 }
 

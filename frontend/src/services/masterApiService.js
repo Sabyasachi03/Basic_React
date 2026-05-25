@@ -1,74 +1,38 @@
 import api from "@/services/api";
 import { API_ENDPOINTS } from "@/services/endpoints";
 
-export async function fetchMasterCountries() {
-  const response = await api.get(API_ENDPOINTS.masters.countries);
-  return response.data;
-}
+export const countryApi = {
+  list: async () => (await api.get(API_ENDPOINTS.masters.countries)).data,
+  create: async (payload) => (await api.post(API_ENDPOINTS.masters.countries, payload)).data,
+  update: async (id, payload) => (await api.put(API_ENDPOINTS.masters.countryById(id), payload)).data,
+  remove: async (id) => (await api.delete(API_ENDPOINTS.masters.countryById(id))).data,
+};
 
-export async function createMasterCountry(payload) {
-  const response = await api.post(API_ENDPOINTS.masters.countries, payload);
-  return response.data;
-}
+export const stateApi = {
+  list: async (countryId = null) =>
+    (
+      await api.get(API_ENDPOINTS.masters.states, {
+        params: countryId ? { country_id: countryId } : undefined,
+      })
+    ).data,
+  getById: async (id) => (await api.get(API_ENDPOINTS.masters.stateById(id))).data,
+  create: async (payload) => (await api.post(API_ENDPOINTS.masters.states, payload)).data,
+  update: async (id, payload) => (await api.put(API_ENDPOINTS.masters.stateById(id), payload)).data,
+  remove: async (id) => (await api.delete(API_ENDPOINTS.masters.stateById(id))).data,
+};
 
-export async function updateMasterCountry(countryId, payload) {
-  const response = await api.put(API_ENDPOINTS.masters.countryById(countryId), payload);
-  return response.data;
-}
+export const districtApi = {
+  list: async (params = {}) => (await api.get(API_ENDPOINTS.masters.districts, { params })).data,
+  getById: async (id) => (await api.get(API_ENDPOINTS.masters.districtById(id))).data,
+  create: async (payload) => (await api.post(API_ENDPOINTS.masters.districts, payload)).data,
+  update: async (id, payload) => (await api.put(API_ENDPOINTS.masters.districtById(id), payload)).data,
+  remove: async (id) => (await api.delete(API_ENDPOINTS.masters.districtById(id))).data,
+};
 
-export async function deleteMasterCountry(countryId) {
-  const response = await api.delete(API_ENDPOINTS.masters.countryById(countryId));
-  return response.data;
-}
-
-export async function fetchMasterStates(countryId = null) {
-  const response = await api.get(API_ENDPOINTS.masters.states, {
-    params: countryId ? { country_id: countryId } : undefined,
-  });
-  return response.data;
-}
-
-export async function fetchMasterStateById(stateId) {
-  const response = await api.get(API_ENDPOINTS.masters.stateById(stateId));
-  return response.data;
-}
-
-export async function createMasterState(payload) {
-  const response = await api.post(API_ENDPOINTS.masters.states, payload);
-  return response.data;
-}
-
-export async function updateMasterState(stateId, payload) {
-  const response = await api.put(API_ENDPOINTS.masters.stateById(stateId), payload);
-  return response.data;
-}
-
-export async function deleteMasterState(stateId) {
-  const response = await api.delete(API_ENDPOINTS.masters.stateById(stateId));
-  return response.data;
-}
-
-export async function fetchMasterDistricts() {
-  const response = await api.get(API_ENDPOINTS.masters.districts);
-  return response.data;
-}
-
-export async function fetchMasterDistrictById(districtId) {
-  const response = await api.get(API_ENDPOINTS.masters.districtById(districtId));
-  return response.data;
-}
-
-export async function createMasterDistrict(payload) {
-  const response = await api.post(API_ENDPOINTS.masters.districts, payload);
-  return response.data;
-}
-
-export async function updateMasterDistrict(districtId, payload) {
-  const response = await api.put(API_ENDPOINTS.masters.districtById(districtId), payload);
-  return response.data;
-}
-
-export async function deleteMasterDistrict(districtId) {
-  const response = await api.delete(API_ENDPOINTS.masters.districtById(districtId));
-  return response.data;
-}
+export const cityApi = {
+  list: async (params = {}) => (await api.get(API_ENDPOINTS.masters.cities, { params })).data,
+  getById: async (id) => (await api.get(API_ENDPOINTS.masters.cityById(id))).data,
+  create: async (payload) => (await api.post(API_ENDPOINTS.masters.cities, payload)).data,
+  update: async (id, payload) => (await api.put(API_ENDPOINTS.masters.cityById(id), payload)).data,
+  remove: async (id) => (await api.delete(API_ENDPOINTS.masters.cityById(id))).data,
+};

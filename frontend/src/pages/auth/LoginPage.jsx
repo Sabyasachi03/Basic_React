@@ -30,8 +30,8 @@ function LoginPage() {
       const response = await loginUser(values);
       storeUser(response.user);
       toast.success(response.message || "Login successful");
-      navigate("/dashboard");
-    } catch (error) {
+      navigate("/master/country");
+    } catch {
       toast.error("Invalid email or password.");
     }
   };
@@ -40,7 +40,7 @@ function LoginPage() {
     <Card className="mx-auto w-full max-w-md border-slate-200 bg-white/95 shadow-xl">
       <CardHeader>
         <CardTitle>Login</CardTitle>
-        <CardDescription>Access your admin dashboard.</CardDescription>
+        <CardDescription>Access your master dashboard.</CardDescription>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
@@ -49,16 +49,12 @@ function LoginPage() {
             <Input id="email" type="email" placeholder="you@example.com" {...register("email")} />
             {errors.email && <p className="text-xs text-red-600">{errors.email.message}</p>}
           </div>
-
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
             <Input id="password" type="password" placeholder="Enter your password" {...register("password")} />
             {errors.password && <p className="text-xs text-red-600">{errors.password.message}</p>}
           </div>
-
-          <Button className="w-full" type="submit" disabled={isSubmitting}>
-            {isSubmitting ? "Signing in..." : "Login"}
-          </Button>
+          <Button className="w-full" type="submit" disabled={isSubmitting}>{isSubmitting ? "Signing in..." : "Login"}</Button>
         </form>
       </CardContent>
     </Card>
